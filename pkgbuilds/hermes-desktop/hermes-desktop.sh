@@ -30,9 +30,10 @@ if ! timeout 5 unshare --user --map-root-user true 2>/dev/null; then
 fi
 
 # Current launchers expose their store interpreter through a read-only machine
-# boundary. Use that interpreter to ask PM for the committed dependency venv.
-runtime_python="$runtime/venv/bin/python"
-if [[ ! -x $runtime_python && -x $runtime/.hermes/bin/hermes ]]; then
+# boundary. Use that interpreter to ask PM for the committed dependency venv;
+# a venv/ still in the checkout predates it and is only the fallback.
+runtime_python=""
+if [[ -x $runtime/.hermes/bin/hermes ]]; then
   runtime_command=$("$runtime/.hermes/bin/hermes" --print-runtime-command 2>/dev/null || true)
   store_python=$(/usr/bin/python - "$runtime_command" <<'PY' 2>/dev/null || true
 import json
@@ -59,6 +60,7 @@ PY
     )
   fi
 fi
+[[ -x $runtime_python ]] || runtime_python="$runtime/venv/bin/python"
 
 python=/usr/bin/python
 if [[ -n $runtime_python && -x $runtime_python && -f $runtime/hermes_cli/main.py ]]; then

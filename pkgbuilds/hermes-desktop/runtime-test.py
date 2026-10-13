@@ -195,6 +195,13 @@ def load_config():
     shim.chmod(0o755)
     config.write_text(json.dumps({"desktop": {"disable_gpu": True}}))
     check_launch(overrides=wayland, expected_args=["--ozone-platform=wayland"], gpu="1")
+    # A venv/ left in the checkout, like the one omacom/omarchy#13975's workaround links
+    # to an older generation, lacks the dependency and must not win over the committed one.
+    leftover = runtime / "venv/bin/python"
+    leftover.parent.mkdir(parents=True)
+    leftover.symlink_to(sys.executable)
+    check_launch(overrides=wayland, expected_args=["--ozone-platform=wayland"], gpu="1")
+    shutil.rmtree(runtime / "venv")
     shutil.rmtree(runtime / ".hermes")
     shutil.rmtree(pm)
     config.unlink()
